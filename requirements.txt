@@ -1,8 +1,9 @@
-azure-common==1.1.26
-azure-core==1.9.0
-azure-identity==1.5.0
-azure-mgmt-compute==18.0.0
-azure-mgmt-core==1.2.2
-azure-mgmt-network==17.0.0
-azure-mgmt-resource==15.0.0
-discord.py==1.5.1
+azure-common
+azure-core
+azure-identity
+azure-mgmt-compute
+azure-mgmt-core
+azure-mgmt-network
+azure-mgmt-resource
+discord.py
+dotenv
