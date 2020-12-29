@@ -6,4 +6,4 @@ azure-mgmt-core
 azure-mgmt-network
 azure-mgmt-resource
 discord.py
-dotenv
+python-dotenv
