@@ -7,3 +7,4 @@ azure-mgmt-network
 azure-mgmt-resource
 discord.py
 python-dotenv
+msrestazure
