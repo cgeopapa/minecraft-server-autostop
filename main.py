@@ -1,6 +1,7 @@
 import os
 import discord
 from dotenv import load_dotenv
+from mcrcon import MCRcon
 from azure.mgmt.compute import ComputeManagementClient
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.identity import ClientSecretCredential
@@ -39,6 +40,10 @@ async def on_message(message):
         return
     if message.content.startswith('!stop'):
         await message.channel.send("Stoping minecraft server...")
+
+        with MCRcon(os.getenv('SERVER_URL'), os.getenv('RCON_PASSWORD')) as mcr:
+            resp = mcr.command("stop")
+
         start_operation = compute_client.virtual_machines.begin_deallocate(GROUP_NAME, VM_NAME)
         start_operation.wait()
         await message.channel.send("Minecraft server has stopped!")
