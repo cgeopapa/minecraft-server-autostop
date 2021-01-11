@@ -32,20 +32,27 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
-    if message.content.startswith('!start'):
+    if message.content == '!start':
         await message.channel.send("Starting minecraft server...")
         start_operation = compute_client.virtual_machines.begin_start(GROUP_NAME, VM_NAME)
         start_operation.wait()
         await message.channel.send("Minecraft server is ready!")
         return
-    if message.content.startswith('!stop'):
+    if message.content == '!stop':
         await message.channel.send("Stoping minecraft server...")
 
-        with MCRcon(os.getenv('SERVER_URL'), os.getenv('RCON_PASSWORD')) as mcr:
-            resp = mcr.command("stop")
+        try:
+            with MCRcon(os.getenv('SERVER_URL'), os.getenv('RCON_PASSWORD')) as mcr:
+                resp = mcr.command("stop")
+        except:
+            await message.channel.send("Minecraft server seems to be stopped. Deallocating VM...")
 
         start_operation = compute_client.virtual_machines.begin_deallocate(GROUP_NAME, VM_NAME)
         start_operation.wait()
         await message.channel.send("Minecraft server has stopped!")
+        return
+    if message.content == '!help':
+        await message.channel.send("!start -> Start the Minecraft server\n!stop -> Stop the Minecraft server")
+        return
 
 client.run(TOKEN)
