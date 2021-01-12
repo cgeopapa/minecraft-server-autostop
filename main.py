@@ -1,4 +1,5 @@
 import os
+import time
 import discord
 from dotenv import load_dotenv
 from mcrcon import MCRcon
@@ -36,6 +37,7 @@ async def on_message(message):
         await message.channel.send("Starting minecraft server...")
         start_operation = compute_client.virtual_machines.begin_start(GROUP_NAME, VM_NAME)
         start_operation.wait()
+        time.sleep(10)
         await message.channel.send("Minecraft server is ready!")
         return
     if message.content == '!stop':
