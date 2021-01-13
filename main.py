@@ -1,17 +1,16 @@
 import os
 import time
 import discord
-import asyncio
 from dotenv import load_dotenv
 from mcrcon import MCRcon
 from azure.mgmt.compute import ComputeManagementClient
-from azure.common.credentials import ServicePrincipalCredentials
 from azure.identity import ClientSecretCredential
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GROUP_NAME = os.getenv('GROUP_NAME')
 VM_NAME = os.getenv('VM_NAME')
+
 
 def get_credentials():
     subscription_id = os.getenv('AZURE_SUBSCRIPTION_ID')
@@ -22,9 +21,16 @@ def get_credentials():
     )
     return credentials, subscription_id
 
+
+client = discord.Client()
+credentials, subscription_id = get_credentials()
+compute_client = ComputeManagementClient(credentials, subscription_id)
+
+
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
+
 
 @client.event
 async def on_message(message):
@@ -54,11 +60,5 @@ async def on_message(message):
         await message.channel.send("!start -> Start the Minecraft server\n!stop -> Stop the Minecraft server")
         return
 
-client = discord.Client()
-credentials, subscription_id = get_credentials()
-compute_client = ComputeManagementClient(credentials, subscription_id)
 
-loop = asyncio.get_event_loop()
-dClient = loop.create_task(client.start(TOKEN))
-timerTask = loop.create_task(timer())
-loop.run_forever()
+client.run(TOKEN)
