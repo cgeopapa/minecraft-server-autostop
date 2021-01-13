@@ -1,6 +1,7 @@
 import os
 import time
 import discord
+import asyncio
 from dotenv import load_dotenv
 from mcrcon import MCRcon
 from azure.mgmt.compute import ComputeManagementClient
@@ -20,10 +21,6 @@ def get_credentials():
         tenant_id=os.getenv('AZURE_TENANT_ID')
     )
     return credentials, subscription_id
-
-client = discord.Client()
-credentials, subscription_id = get_credentials()
-compute_client = ComputeManagementClient(credentials, subscription_id)
 
 @client.event
 async def on_ready():
@@ -57,4 +54,11 @@ async def on_message(message):
         await message.channel.send("!start -> Start the Minecraft server\n!stop -> Stop the Minecraft server")
         return
 
-client.run(TOKEN)
+client = discord.Client()
+credentials, subscription_id = get_credentials()
+compute_client = ComputeManagementClient(credentials, subscription_id)
+
+loop = asyncio.get_event_loop()
+dClient = loop.create_task(client.start(TOKEN))
+timerTask = loop.create_task(timer())
+loop.run_forever()
