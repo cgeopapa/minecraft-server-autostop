@@ -1,6 +1,4 @@
-import os
-import time
-import discord
+import os, time, discord, keep_alive
 from dotenv import load_dotenv
 from mcrcon import MCRcon
 from azure.mgmt.compute import ComputeManagementClient
@@ -61,4 +59,5 @@ async def on_message(message):
         return
 
 
+keep_alive.keep_alive()
 client.run(TOKEN)
