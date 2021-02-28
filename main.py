@@ -1,8 +1,13 @@
-import os, time, discord, keep_alive
+import os
+import time
+from time import gmtime
+
+from azure.identity import ClientSecretCredential
+from azure.mgmt.compute import ComputeManagementClient
+from discord.ext import tasks, commands
+from discord.ext.commands import Bot
 from dotenv import load_dotenv
 from mcrcon import MCRcon
-from azure.mgmt.compute import ComputeManagementClient
-from azure.identity import ClientSecretCredential
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -20,44 +25,61 @@ def get_credentials():
     return credentials, subscription_id
 
 
-client = discord.Client()
+bot = Bot(command_prefix='!')
 credentials, subscription_id = get_credentials()
 compute_client = ComputeManagementClient(credentials, subscription_id)
 
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'{client.user} has connected to Discord!')
+    print(f'{bot.user} has connected to Discord!')
 
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-    if message.content == '!start':
-        await message.channel.send("Starting minecraft server...")
-        start_operation = compute_client.virtual_machines.begin_start(GROUP_NAME, VM_NAME)
-        start_operation.wait()
-        time.sleep(10)
-        await message.channel.send("Minecraft server is ready!")
-        return
-    if message.content == '!stop':
-        await message.channel.send("Stoping minecraft server...")
-
-        try:
-            with MCRcon(os.getenv('SERVER_URL'), os.getenv('RCON_PASSWORD')) as mcr:
-                resp = mcr.command("stop")
-        except:
-            await message.channel.send("Minecraft server seems to be stopped. Deallocating VM...")
-
-        start_operation = compute_client.virtual_machines.begin_deallocate(GROUP_NAME, VM_NAME)
-        start_operation.wait()
-        await message.channel.send("Minecraft server has stopped!")
-        return
-    if message.content == '!help':
-        await message.channel.send("!start -> Start the Minecraft server\n!stop -> Stop the Minecraft server")
-        return
+@bot.command(name='start', help='Start minecraft server')
+async def startServer(context):
+    await context.send("Starting minecraft server...")
+    start_operation = compute_client.virtual_machines.begin_start(GROUP_NAME, VM_NAME)
+    start_operation.wait()
+    time.sleep(10)
+    await context.channel.send("Minecraft server is ready!")
 
 
-keep_alive.keep_alive()
-client.run(TOKEN)
+@bot.command(name='stop', help='Stop minecraft server')
+async def sropServer(context):
+    await context.send("Stoping minecraft server...")
+
+    try:
+        with MCRcon(os.getenv('SERVER_URL'), os.getenv('RCON_PASSWORD')) as mcr:
+            resp = mcr.command("stop")
+    except:
+        await context.send("Minecraft server seems to be stopped. Deallocating VM...")
+
+    start_operation = compute_client.virtual_machines.begin_deallocate(GROUP_NAME, VM_NAME)
+    start_operation.wait()
+    await context.send("Minecraft server has stopped!")
+
+
+class MyCog(commands.Cog):
+    def __init__(self):
+        self.first = True
+        self.death.start()
+
+    @tasks.loop(minutes=10)
+    async def death(self):
+        if self.first:
+            self.first = False
+        else:
+            gmt = gmtime().tm_hour + 2
+            print(f"Time is {gmt}")
+            if 14 > gmt > 2:
+                print("Closing")
+                await bot.close()
+                print("Closed")
+
+
+bot.add_cog(MyCog())
+while True:
+    bot.run(TOKEN)
+    sleepTime = (14 - (gmtime().tm_hour + 2))*3600 - gmtime().tm_min * 60
+    print(f"Will now sleep for {sleepTime} seconds(s)")
+    time.sleep(sleepTime)
