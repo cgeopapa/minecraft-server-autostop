@@ -25,7 +25,7 @@ def get_credentials():
     return credentials, subscription_id
 
 
-bot = Bot(command_prefix='!')
+bot = Bot(command_prefix='#')
 credentials, subscription_id = get_credentials()
 compute_client = ComputeManagementClient(credentials, subscription_id)
 
@@ -59,27 +59,4 @@ async def sropServer(context):
     await context.send("Minecraft server has stopped!")
 
 
-class MyCog(commands.Cog):
-    def __init__(self):
-        self.first = True
-        self.death.start()
-
-    @tasks.loop(minutes=10)
-    async def death(self):
-        if self.first:
-            self.first = False
-        else:
-            gmt = gmtime().tm_hour + 2
-            print(f"Time is {gmt}")
-            if 14 > gmt > 2:
-                print("Closing")
-                await bot.close()
-                print("Closed")
-
-
-bot.add_cog(MyCog())
-while True:
-    bot.run(TOKEN)
-    sleepTime = (14 - (gmtime().tm_hour + 2))*3600 - gmtime().tm_min * 60
-    print(f"Will now sleep for {sleepTime} seconds(s)")
-    time.sleep(sleepTime)
+bot.run(TOKEN)
