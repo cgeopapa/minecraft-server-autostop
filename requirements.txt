@@ -9,5 +9,3 @@ discord.py
 python-dotenv
 msrestazure
 mcrcon
-heroku3
-flask
