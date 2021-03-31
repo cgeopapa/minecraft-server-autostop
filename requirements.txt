@@ -5,7 +5,7 @@ azure-mgmt-compute
 azure-mgmt-core
 azure-mgmt-network
 azure-mgmt-resource
-discord.py
+dispike==0.9.0a0
 python-dotenv
 msrestazure
 mcrcon

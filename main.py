@@ -1,11 +1,15 @@
+import asyncio
 import os
-import time
-from time import gmtime
 
 from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
-from discord.ext import tasks, commands
-from discord.ext.commands import Bot
+from dispike import Dispike
+from dispike.followup import FollowUpMessages
+from dispike.models import IncomingDiscordInteraction
+from dispike.register.models import (
+    DiscordCommand,
+)
+from dispike.response import DiscordResponse
 from dotenv import load_dotenv
 from mcrcon import MCRcon
 
@@ -25,38 +29,58 @@ def get_credentials():
     return credentials, subscription_id
 
 
-bot = Bot(command_prefix='#')
+startCommand = DiscordCommand(
+    name="start",
+    description="start minecraft server",
+    options=[]
+)
+stopCommand = DiscordCommand(
+    name="stop",
+    description="stop minecraft server",
+    options=[]
+)
+bot = Dispike(client_public_key="51aca7e76e8edef6ad758d38e93fd685af4b2168d0596435f5d659c75d8f55d0",
+              application_id="825407954848317500",
+              bot_token=TOKEN)
 credentials, subscription_id = get_credentials()
 compute_client = ComputeManagementClient(credentials, subscription_id)
+bot.register(startCommand, guild_only=True, guild_to_target=798133022091640893)
+bot.register(stopCommand, guild_only=True, guild_to_target=798133022091640893)
 
 
-@bot.event
-async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
-
-
-@bot.command(name='start', help='Start minecraft server')
-async def startServer(context):
-    await context.send("Starting minecraft server...")
-    start_operation = compute_client.virtual_machines.begin_start(GROUP_NAME, VM_NAME)
-    start_operation.wait()
-    time.sleep(10)
-    await context.channel.send("Minecraft server is ready!")
-
-
-@bot.command(name='stop', help='Stop minecraft server')
-async def sropServer(context):
-    await context.send("Stoping minecraft server...")
-
+async def stopMCServer(ctx: IncomingDiscordInteraction):
+    await asyncio.sleep(0.1)
+    followup = FollowUpMessages(bot=bot, interaction=ctx)
     try:
         with MCRcon(os.getenv('SERVER_URL'), os.getenv('RCON_PASSWORD')) as mcr:
-            resp = mcr.command("stop")
+            mcr.command("stop")
     except:
-        await context.send("Minecraft server seems to be stopped. Deallocating VM...")
-
+        await followup.async_create_follow_up_message(DiscordResponse(follow_up_message=False, content="Minecraft server seems to be stopped. Deallocating VM..."))
     start_operation = compute_client.virtual_machines.begin_deallocate(GROUP_NAME, VM_NAME)
     start_operation.wait()
-    await context.send("Minecraft server has stopped!")
+    await followup.async_create_follow_up_message(DiscordResponse(content="Minecraft server has stopped!"))
 
 
-bot.run(TOKEN)
+async def startMCServer(ctx: IncomingDiscordInteraction):
+    await asyncio.sleep(0.1)
+    start_operation = compute_client.virtual_machines.begin_start(GROUP_NAME, VM_NAME)
+    start_operation.wait()
+    await asyncio.sleep(20)
+    followup = FollowUpMessages(bot=bot, interaction=ctx)
+    await followup.async_create_follow_up_message(DiscordResponse(content="Minecraft server is ready!"))
+
+
+@bot.interaction.on("start")
+async def startInteraction(ctx: IncomingDiscordInteraction) -> DiscordResponse:
+    await bot.background(startMCServer, ctx)
+    return DiscordResponse(content="Starting minecraft server...")
+
+
+@bot.interaction.on("stop")
+async def sropServer(ctx: IncomingDiscordInteraction) -> DiscordResponse:
+    await bot.background(stopMCServer, ctx)
+
+    return DiscordResponse(content="Stopping minecraft server...")
+
+
+bot.run(port=5000)
