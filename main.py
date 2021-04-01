@@ -17,7 +17,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GROUP_NAME = os.getenv('GROUP_NAME')
 VM_NAME = os.getenv('VM_NAME')
-PORT = os.environ.get("PORT", 5000)
+PORT = int(os.environ.get("PORT", 5000))
 
 
 def get_credentials():
