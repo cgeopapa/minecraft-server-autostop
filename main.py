@@ -20,7 +20,7 @@ VM_NAME = os.getenv('VM_NAME')
 if os.getenv('PORT') is None:
     PORT = 5000
 else:
-    PORT = os.getenv('PORT')
+    PORT = int(os.getenv('PORT'))
 
 
 def get_credentials():
