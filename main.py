@@ -17,6 +17,10 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GROUP_NAME = os.getenv('GROUP_NAME')
 VM_NAME = os.getenv('VM_NAME')
+if os.getenv('PORT') is None:
+    PORT = 5000
+else:
+    PORT = os.getenv('PORT')
 
 
 def get_credentials():
@@ -83,4 +87,4 @@ async def sropServer(ctx: IncomingDiscordInteraction) -> DiscordResponse:
     return DiscordResponse(content="Stopping minecraft server...")
 
 
-bot.run(port=5000)
+bot.run(port=PORT)
